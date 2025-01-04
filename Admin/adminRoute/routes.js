@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const auth = require('../../Middleware/auth');
-const { newAdmin, adminLogin, createProduct, getAllProduct, getSingleProduct, updateProduct, deleteProduct, updatePassword, forgetPassword, resetPassword, newCategory, getAllCategory, deleteCategory, updateCategory, getCatDaitles, getCatWiseProduct, getTotalCount } = require('../adminControllers/controllers');
+const { newAdmin, adminLogin, createProduct, getAllProduct, getSingleProduct, updateProduct, deleteProduct, updatePassword, forgetPassword, resetPassword, newCategory, getAllCategory, deleteCategory, updateCategory, getCatDaitles, getCatWiseProduct, getTotalCount, fillQuantityPrice } = require('../adminControllers/controllers');
 const { getAllOrder, updateOrderStatus, getAllOrderInExcel } = require("../../ManageOrder/orderContollers/controllers");
 const { getUserApprovel, getAllUsers, getApprovedUsers, getUnapprovedUser } = require("../../User/userControllers/controllers");
 
@@ -52,6 +52,8 @@ adminRoute.get('/get-cat-daitles', auth.verifyToken, getCatDaitles);
 adminRoute.get('/cat-wise-prod', auth.verifyToken, getCatWiseProduct);
 
 adminRoute.post('/create-product', auth.verifyToken, Upload.single('image'), createProduct)
+
+adminRoute.post('/add-prices', auth.verifyToken, fillQuantityPrice);
 
 adminRoute.get('/get-all-product', auth.verifyToken, getAllProduct)
 

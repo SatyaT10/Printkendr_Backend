@@ -12,26 +12,21 @@ const productSchema = new mongoose.Schema({
     description: {
         type: String
     },
-    priceWithQuenty: [
-        {
-            price: {
-                type: Number
-            },
-            quantity: {
-                type: Number
-            }
-        }
-    ],
-    attributes: [
-        {
-            attribute: {
-                type: String
-            },
-            value: {
-                type: String
-            }
-        }
-    ],
+    size: [{
+        type: String
+    }],
+    paperType: [{
+        type: String
+    }],
+    printingType: [{
+        type: String
+    }],
+    finishingType: [{
+        type: String
+    }],
+    quantity: [{
+        type: Number
+    }],
     createdAt: {
         type: Date,
         default: Date.now
@@ -46,4 +41,55 @@ const productSchema = new mongoose.Schema({
     }
 });
 
+
+
+
+// const productSchema = new mongoose.Schema({
+//     categoryId: {
+//         type: mongoose.Schema.Types.ObjectId,
+//         ref: 'Category'
+//     },
+//     productName: {
+//         type: String,
+//         required: true
+//     },
+//     description: {
+//         type: String
+//     },
+//     priceWithQuenty: [
+//         {
+//             price: {
+//                 type: Number
+//             },
+//             quantity: {
+//                 type: Number
+//             }
+//         }
+//     ],
+//     attributes: [
+//         {
+//             attribute: {
+//                 type: String
+//             },
+//             value: {
+//                 type: String
+//             }
+//         }
+//     ],
+//     createdAt: {
+//         type: Date,
+//         default: Date.now
+//     },
+//     updatedAt: {
+//         type: Date,
+//         default: Date.now
+//     },
+//     productImage: {
+//         type: String,
+//         // required: true
+//     }
+// });
+
 module.exports = mongoose.model('Product', productSchema);
+
+

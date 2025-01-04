@@ -8,6 +8,8 @@ const Category = require('../../Model/CategoryModel');
 const CustomError = require('../../error/CustomError');
 const Ordar = require('../../Model/OrdarModel');
 const Wallet = require('../../Model/WalletModel');
+const Combination = require('../../Model/CombinationModel');
+
 const { sendResetPasswordMail, generateOtp, securePassword, verifyOtp } = require('../../User/userControllers/controllers');
 
 const newAdmin = async (req, res, next) => {
@@ -80,8 +82,9 @@ const adminLogin = async (req, res, next) => {
 const createProduct = async (req, res, next) => {
     try {
         const isAdmin = req.user.isAdmin
-        const filename = req.file.filename
-        const categoryId = req.body.categoryId;
+        const filename = req.file.filename;
+        let productImage =`${process.env.IMGURL}Images/${filename}`;
+        const categoryId = req.body._id;
         if (isAdmin == 1) {
             if (categoryId) {
                 const isCategory = await Category.findOne({
@@ -91,15 +94,50 @@ const createProduct = async (req, res, next) => {
                     const ProductCreated = await Product.create({
                         productName: req.body.productName,
                         description: req.body.description,
-                        priceWithQuenty: req.body.priceWithQuenty,
-                        productImage: filename,
+                        size: req.body.size,
+                        paperType: req.body.paper,
+                        printingType: req.body.printing,
+                        finishingType: req.body.finishing,
+                        quantity: req.body.quantity,
+                        productImage: productImage,
                         categoryId: categoryId,
-                        attributes: req.body.attributes
                     });
+                    const { size, paperType, printingType, finishingType, quantity } = ProductCreated;
+
+                    const sizes = size.length ? size : [''];
+                    const paperTypes = paperType.length ? paperType : [''];
+                    const printingTypes = printingType.length ? printingType : [''];
+                    const finishingTypes = finishingType.length ? finishingType : [''];
+                    const combinations = [];
+                    sizes.forEach(s => {
+                        paperTypes.forEach(p => {
+                            printingTypes.forEach(pt => {
+                                finishingTypes.forEach(f => {
+                                    combinations.push({
+                                        productId: ProductCreated._id,
+                                        attributes: {
+                                            size: s,
+                                            paperType: p,
+                                            printingType: pt,
+                                            finishingType: f
+                                        },
+                                        quantityWithPrice: quantity.map(q => {
+                                            return {
+                                                quantity: q,
+                                            }
+                                        })
+                                    });
+                                });
+                            });
+                        });
+                    });
+                    const savedCombinations = await Combination.insertMany(combinations);
+                    console.log(`${savedCombinations.length} combinations created.`);
+                    console.log('Quantity added successfully.');
                     res.status(201).json({
                         success: true,
                         message: "Product Created sucessfully!",
-                        ProductCreated: ProductCreated
+                        Combinations: savedCombinations
                     })
                 } else {
                     throw new CustomError("Category Not Found!", 404);
@@ -112,6 +150,47 @@ const createProduct = async (req, res, next) => {
         }
     } catch (error) {
         console.error("Error creating products:", error.message);
+        next(error)
+    }
+}
+
+const fillQuantityPrice = async (req, res, next) => {
+    try {
+        const isAdmin = req.user.isAdmin
+        const combinationId = req.body._id;
+        const quantityPrice = req.body.quantityPrice;
+        if (isAdmin == 1) {
+            const combination = await Combination.findOne({ _id: combinationId });
+            if (combination) {
+                if (!(combination.quantityWithPrice.length == quantityPrice.length)) {
+                    throw new CustomError("Quantity and Price should be equal", 400);
+                } else {
+                    console.log(combination.quantityWithPrice[0].quantity);
+                    const quantityWithPrice = quantityPrice.map((q ,index)=> ({
+                        quantity: combination.quantityWithPrice[index].quantity,
+                        price: q,
+                        
+                    }));
+                    const updatePrice = await Combination.findOneAndUpdate(
+                        { _id: combinationId },
+                        { $set: { quantityWithPrice } },
+                        { new: true } // This option returns the updated document
+                    );
+                    console.log('Updated Combination:', updatePrice);
+                    res.status(201).json({
+                        success: true,
+                        message: "Quantity and Price added successfully",
+                        quantityPrice: updatePrice
+                    });
+                }
+            } else {
+                throw new CustomError("Combination not found", 404);
+            }
+        } else {
+            throw new CustomError("You are not Authorized!", 401);
+        }
+    } catch (error) {
+        console.error("Error filling quantity price:", error.message);
         next(error)
     }
 }
@@ -321,7 +400,8 @@ const newCategory = async (req, res, next) => {
     try {
         const isAdmin = req.user.isAdmin;
         const { categoryName, categoryDescription } = req.body;
-        const cateImage = req.file.filename;
+        const filename = req.file.filename
+        let cateImage =`${process.env.IMGURL}Images/${filename}`;
         if (isAdmin == 1) {
             if (categoryName) {
                 await Category.create({
@@ -513,13 +593,13 @@ const getTotalCount = async (req, res, next) => {
                 {
                     $group: {
                         _id: null,
-                        total: { $sum: "$balance" } 
+                        total: { $sum: "$balance" }
                     }
                 }
             ]);
-            
+
             const totalBalance = totalWalletAmount.length > 0 ? totalWalletAmount[0].total : 0;
-            
+
             console.log("Total Wallet Balance:", totalBalance);
 
             let count = {
@@ -567,4 +647,5 @@ module.exports = {
     getCatDaitles,
     getCatWiseProduct,
     getTotalCount,
+    fillQuantityPrice
 }

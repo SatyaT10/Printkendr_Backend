@@ -1,3 +1,4 @@
+require('dotenv').config();
 const CustomError = require('../../error/CustomError');
 const Order = require('../../Model/OrdarModel');
 const User = require('../../Model/UserModal');
@@ -7,6 +8,8 @@ const Product = require('../../Model/productModel');
 const orderPlace = async (req, res, next) => {
     try {
         const userId = req.user.id
+        const filename = req.file.filename;
+        let OrderFile = `${process.env.IMGURL}orderFile/${filename}`;
         const { id, products, totalAmount } = req.body;
         if (!products || !totalAmount) {
             throw new CustomError("All fields are required!", 400);
@@ -58,7 +61,7 @@ const orderPlace = async (req, res, next) => {
                     products: products,
                     status: "placed",
                     totalAmount: totalAmount,
-                    productPdf: req.file.filename,
+                    productPdf: OrderFile,
                 })
             }
             await orderData.save();
