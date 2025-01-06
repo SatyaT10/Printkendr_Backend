@@ -83,7 +83,7 @@ const createProduct = async (req, res, next) => {
     try {
         const isAdmin = req.user.isAdmin
         const filename = req.file.filename;
-        let productImage =`${process.env.IMGURL}Images/${filename}`;
+        let productImage = `${process.env.IMGURL}Images/${filename}`;
         const categoryId = req.body._id;
         if (isAdmin == 1) {
             if (categoryId) {
@@ -166,10 +166,10 @@ const fillQuantityPrice = async (req, res, next) => {
                     throw new CustomError("Quantity and Price should be equal", 400);
                 } else {
                     console.log(combination.quantityWithPrice[0].quantity);
-                    const quantityWithPrice = quantityPrice.map((q ,index)=> ({
+                    const quantityWithPrice = quantityPrice.map((q, index) => ({
                         quantity: combination.quantityWithPrice[index].quantity,
                         price: q,
-                        
+
                     }));
                     const updatePrice = await Combination.findOneAndUpdate(
                         { _id: combinationId },
@@ -227,12 +227,14 @@ const getSingleProduct = async (req, res, next) => {
             const ProductData = await Product.findOne({
                 _id: ProductId
             })
+            const productCombination = await Combination.find({ productId: ProductId })
             if (ProductData) {
                 res.status(200).
                     json({
                         success: true,
                         message: "Your Product Daitles....",
-                        Product: ProductData
+                        Product: ProductData,
+                        productCombination: productCombination
                     })
             } else {
                 throw new CustomError("Product isn't available", 404);
@@ -401,7 +403,7 @@ const newCategory = async (req, res, next) => {
         const isAdmin = req.user.isAdmin;
         const { categoryName, categoryDescription } = req.body;
         const filename = req.file.filename
-        let cateImage =`${process.env.IMGURL}Images/${filename}`;
+        let cateImage = `${process.env.IMGURL}Images/${filename}`;
         if (isAdmin == 1) {
             if (categoryName) {
                 await Category.create({

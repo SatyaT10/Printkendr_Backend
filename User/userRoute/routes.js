@@ -74,4 +74,5 @@ route.get('/get-cat-wise-product', auth.verifyToken, getCatWiseProduct);
 
 route.get('/wallet-balance', auth.verifyToken, getWalletBalance);
 
+
 module.exports = route

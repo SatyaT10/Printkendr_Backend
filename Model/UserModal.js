@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    notApprovelReason:{
+    remark:{
         type:String,
         default:""
     }
