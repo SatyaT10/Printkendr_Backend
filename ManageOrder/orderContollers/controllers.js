@@ -17,6 +17,9 @@ const orderPlace = async (req, res, next) => {
         const userData = await User.findOne({
             _id: userId
         })
+        const lastOrder = await Order.findOne({}, {}, { sort: { order_id: -1 } });
+        const newOrderId = lastOrder ? lastOrder.order_id + 1 : 1;
+        console.log(lastOrder);
         let orderData
         if (userData) {
             orderData = await Order.findOne({
@@ -53,6 +56,7 @@ const orderPlace = async (req, res, next) => {
                 });
                 await Promise.all(productPromises);
                 orderData = new Order({
+                    order_id: newOrderId,
                     customerId: userId,
                     customerName: userData.name,
                     customerEmail: userData.email,

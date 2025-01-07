@@ -75,14 +75,17 @@ const sendResetPasswordMail = async (name, email, otp) => {
 const getUserApprovel = async (req, res, next) => {
     try {
         const isAdmin = req.user.isAdmin;
+        console.log(req.body);
         const { userStatus, userId, remark } = req.body
         if (isAdmin) {
-            if (!userStatus || !userId) {
+            if (!userId || typeof userStatus !== "boolean") {
                 throw new CustomError(
                     "User status and user id are required for admin to approve user.",
                     400
                 )
             } else {
+                const lastUser = await User.findOne({}, {}, { sort: { user_id: -1 } });
+                const newUserId = lastUser ? lastUser.user_id + 1 : 1;
                 if (userStatus == true) {
                     const isWalletExist = await Wallet.findOne({
                         userId: userId
@@ -97,7 +100,8 @@ const getUserApprovel = async (req, res, next) => {
                         _id: userId
                     }, {
                         $set: {
-                            is_approved: 1
+                            is_approved: 1,
+                            user_id: newUserId
                         }
                     })
                     res.status(200).json({
@@ -116,7 +120,7 @@ const getUserApprovel = async (req, res, next) => {
                     }, {
                         $set: {
                             is_approved: 0,
-                            notApproveReason: remark
+                            remark: remark,
                         }
                     })
                     res.status(200).json({
@@ -234,7 +238,8 @@ const newUser = async (req, res, next) => {
                 state,
                 country,
                 businessName,
-                GSTNumber
+                GSTNumber,
+                user_id: 0
             });
             res.status(201).json({ success: true, msg: "Registation Completed Successfully!" });
         }

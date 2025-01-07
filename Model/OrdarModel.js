@@ -1,10 +1,14 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-    customerId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
+    order_id:{
+        type:Number,
         required:true
+    },
+    customerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
     customerName: {
         type: String,
@@ -22,33 +26,43 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    products: [
-        {
-            productId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Product', // Reference to Product model
-                required: true
-            },
-            productName: {
-                type: String,
-                required: true
-            },
-            quantity: {
-                type: Number,
-                required: true
-            },
-            price: {
-                type: Number,
-                required: true
-            }
+    products:[{
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product', // Reference to Product model
+            required: true
+        },
+        productName: {
+            type: String,
+            required: true
+        },
+        size: {
+            type: String,
+        },
+        paperType: {
+            type: String,
+        },
+        printingType: {
+            type: String,
+        },
+        finishingType: {
+            type: String,
+        },
+        quantity: {
+            type: Number,
+            required: true
+        },
+        price: {
+            type: Number,
+            required: true
         }
-    ],
+    }],
     totalAmount: {
         type: Number,
         required: true
     },
-    productPdf:{
-        type:String,
+    productPdf: {
+        type: String,
     },
     status: {
         type: String,

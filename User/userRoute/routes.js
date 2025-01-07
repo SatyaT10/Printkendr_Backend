@@ -2,10 +2,12 @@ const route = require('express').Router()
 const auth = require('../../Middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const Order = require('../../Model/OrdarModel');
 
 const { getAllProduct, getSingleProduct, getCatWiseProduct, getAllCategory } = require('../../Admin/adminControllers/controllers');
 const { orderPlace, getMyOrder, getMyOrderDaitle } = require('../../ManageOrder/orderContollers/controllers');
 const { newUser, userLogin, changePassword, forgetPassword, resetPassword, sendResetPasswordMail, updateProfile, getWalletBalance } = require('../userControllers/controllers');
+
 
 
 const storage = multer.diskStorage({
@@ -17,8 +19,10 @@ const storage = multer.diskStorage({
         }
         cb(null, dir); // Save
     },
-    filename: (req, file, cb) => {
-        const name = Order + '-' + Math.round(Math.random() * 1E9);
+    filename: async (req, file, cb) => {
+        const lastOrder = await Order.findOne({}, {}, { sort: { order_id: -1 } });
+        const newOrderId = lastOrder ? lastOrder.order_id + 1 : 1;
+        const name = `OrderNo.-${newOrderId}`;
         cb(null, name + '-' + file.originalname);
     }
 });
