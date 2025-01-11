@@ -66,6 +66,8 @@ route.post('/chnage-password', auth.verifyToken, changePassword);
 
 route.get('/get-all-category', auth.verifyToken, getAllCategory);
 
+route.get('/get-all-product', auth.verifyToken, getAllProduct)
+
 route.post('/order-place', auth.verifyToken, upload.single('file'), orderPlace);
 
 route.get('/get-order', auth.verifyToken, getMyOrder);

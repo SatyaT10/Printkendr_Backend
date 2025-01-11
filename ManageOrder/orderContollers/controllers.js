@@ -4,6 +4,7 @@ const Order = require('../../Model/OrdarModel');
 const User = require('../../Model/UserModal');
 const excelJS = require('exceljs');
 const Product = require('../../Model/productModel');
+const Wallet = require('../../Model/walletModel');
 
 const orderPlace = async (req, res, next) => {
     try {
@@ -68,6 +69,17 @@ const orderPlace = async (req, res, next) => {
                     productPdf: OrderFile,
                 })
             }
+            const updateUserWalletAmount = await Wallet.findOneAndUpdate({
+                userId: userId,
+            })
+            const newAmount = await updateUserWalletAmount.balance - totalAmount
+            const updateWallet = await Wallet.updateOne({
+                userId: userId,
+            }, {
+                $set: {
+                    balance: newAmount
+                }
+            })
             await orderData.save();
             res.status(201).json({
                 success: true,
@@ -155,18 +167,17 @@ const updateOrderStatus = async (req, res, next) => {
     }
 }
 
-
 const getMyOrderDaitle = async (req, res, next) => {
     try {
 
         const userId = req.user.id;
-        const { orderId } = req.body
+        const { _id } = req.body
         if (!userId) {
             throw new CustomError("You are not login", 400)
         } else {
             const orderDetails = await Order.findOne({
                 customerId: userId,
-                _id: orderId
+                _id: _id
             });
             if (orderDetails) {
                 res.status(200).json({

@@ -1,5 +1,5 @@
 const User = require('../../Model/UserModal');
-const Wallet = require('../../Model/WalletModel');
+const Wallet = require('../../Model/walletModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');

@@ -7,7 +7,7 @@ const User = require('../../Model/UserModal');
 const Category = require('../../Model/CategoryModel');
 const CustomError = require('../../error/CustomError');
 const Ordar = require('../../Model/OrdarModel');
-const Wallet = require('../../Model/WalletModel');
+const Wallet = require('../../Model/walletModel');
 const Combination = require('../../Model/CombinationModel');
 
 const { sendResetPasswordMail, generateOtp, securePassword, verifyOtp } = require('../../User/userControllers/controllers');
@@ -156,35 +156,47 @@ const createProduct = async (req, res, next) => {
 
 const fillQuantityPrice = async (req, res, next) => {
     try {
-        const isAdmin = req.user.isAdmin
-        const combinationId = req.body._id;
-        const quantityPrice = req.body.quantityPrice;
+        const isAdmin = req.user.isAdmin;
+        const combinations = req.body;
         if (isAdmin == 1) {
-            const combination = await Combination.findOne({ _id: combinationId });
-            if (combination) {
-                if (!(combination.quantityWithPrice.length == quantityPrice.length)) {
-                    throw new CustomError("Quantity and Price should be equal", 400);
-                } else {
-                    console.log(combination.quantityWithPrice[0].quantity);
-                    const quantityWithPrice = quantityPrice.map((q, index) => ({
-                        quantity: combination.quantityWithPrice[index].quantity,
-                        price: q,
-
-                    }));
-                    const updatePrice = await Combination.findOneAndUpdate(
-                        { _id: combinationId },
-                        { $set: { quantityWithPrice } },
-                        { new: true } // This option returns the updated document
-                    );
-                    console.log('Updated Combination:', updatePrice);
-                    res.status(201).json({
-                        success: true,
-                        message: "Quantity and Price added successfully",
-                        quantityPrice: updatePrice
-                    });
-                }
-            } else {
-                throw new CustomError("Combination not found", 404);
+            if (!Array.isArray(combinations)) {
+                throw new CustomError("Invalid request format. 'combinations' should be an array.", 400);
+            }
+            if (combinations.length === 0) {
+                throw new CustomError("At least one combination is required.", 400);
+            }
+            else {
+                const results = await Promise.all(
+                    combinations.map(async (comb) => {
+                        const { _id, price:prices  } = comb;
+                        if (!_id || !prices || !Array.isArray(prices)) {
+                            return { _id, error: "Invalid data format for this combination" };
+                        }
+                        const combination = await Combination.findOne({ _id:_id });
+                        if (!combination) {
+                            return { combinationId: comb._id, error: "Combination not found" };
+                        }
+                        const updatedQuantityWithPrice = prices.map((price, index) => {
+                            const quantity = combination.quantityWithPrice[index]?.quantity;
+                            if (quantity) {
+                                return { quantity, price };
+                            } else {
+                                return { error:"Please provide Quantity first!" };
+                            }
+                        });
+                        const updatedCombination = await Combination.findOneAndUpdate(
+                            { _id: _id },
+                            { $set: { quantityWithPrice: updatedQuantityWithPrice } },
+                            { new: true } 
+                        );
+                        return { _id, updatedQuantityWithPrice };
+                    })
+                );
+                return res.status(200).json({
+                    success: true,
+                    message: "Combination prices updated successfully",
+                    results
+                });
             }
         } else {
             throw new CustomError("You are not Authorized!", 401);
@@ -449,6 +461,8 @@ const getAllCategory = async (req, res, next) => {
         next(error)
     }
 }
+
+
 const deleteCategory = async (req, res, next) => {
     try {
         const isAdmin = req.user.isAdmin;
