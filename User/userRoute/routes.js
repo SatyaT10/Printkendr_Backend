@@ -5,7 +5,7 @@ const path = require('path');
 const Order = require('../../Model/OrdarModel');
 
 const { getAllProduct, getSingleProduct, getCatWiseProduct, getAllCategory } = require('../../Admin/adminControllers/controllers');
-const { orderPlace, getMyOrder, getMyOrderDaitle } = require('../../ManageOrder/orderContollers/controllers');
+const { orderPlace, getMyOrder, getMyOrderDaitle, orderCancel } = require('../../ManageOrder/orderContollers/controllers');
 const { newUser, userLogin, changePassword, forgetPassword, resetPassword, sendResetPasswordMail, updateProfile, getWalletBalance } = require('../userControllers/controllers');
 
 
@@ -80,5 +80,6 @@ route.get('/get-cat-wise-product', auth.verifyToken, getCatWiseProduct);
 
 route.get('/wallet-balance', auth.verifyToken, getWalletBalance);
 
+route.post('/cancel-order', auth.verifyToken, orderCancel);
 
 module.exports = route

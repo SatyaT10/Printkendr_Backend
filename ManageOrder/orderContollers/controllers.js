@@ -59,7 +59,7 @@ const orderPlace = async (req, res, next) => {
                 orderData = new Order({
                     order_id: newOrderId,
                     customerId: userId,
-                    customerName: userData.name,
+                    customerName: req.body.OrderName || userData.name,
                     customerEmail: userData.email,
                     shippingAddress: userData.address,
                     customerPhone: userData.whatsAppNo,
@@ -73,6 +73,9 @@ const orderPlace = async (req, res, next) => {
                 userId: userId,
             })
             const newAmount = await updateUserWalletAmount.balance - totalAmount
+            if (newAmount < 0) {
+                throw new CustomError("Insufficient balance in wallet", 400)
+            }
             const updateWallet = await Wallet.updateOne({
                 userId: userId,
             }, {
@@ -198,7 +201,7 @@ const getMyOrderDaitle = async (req, res, next) => {
 
 const getAllOrderInExcel = async (req, res, next) => {
     try {
-        const isAdmin = req.user;
+        const isAdmin = req.user.isAdmin;
         if (isAdmin) {
             const workbook = new excelJS.Workbook();
             const worksheet = workbook.addWorksheet("All Order Sheet");
@@ -261,11 +264,58 @@ const getAllOrderInExcel = async (req, res, next) => {
     }
 }
 
+const orderCancel = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const orderId = req.body._id;
+        const isOrder = await Order.findOne({
+            _id: orderId,
+            userId: userId
+        })
+        if (isOrder) {
+            if (isOrder.status == "proceed" || isOrder.status == "completed") {
+                throw new CustomError("You can't cancel this order", 400)
+            } else {
+                const updateOrder = await Order.findOneAndUpdate({
+                    _id: orderId
+                }, {
+                    $set: {
+                        status: "cancelled",
+                        updatedAt: new Date()
+                    }
+                });
+                const updateWalletAmount = await Wallet.findOne({
+                    userId: userId
+                })
+                const amount = updateWalletAmount.balance + isOrder.totalAmount
+                Wallet.findOneAndUpdate({
+                    userId: userId
+                }, {
+                    $set: {
+                        balance: amount
+                    }
+                })
+            }
+            res.status(200).json({
+                message: "Order cancelled successfully",
+                data: updateOrder
+            })
+        } else {
+            throw new CustomError("You are not able to access", 404)
+        }
+    } catch (error) {
+        console.log("Error cancelling order:", error.message);
+        next(error)
+
+    }
+}
+
 module.exports = {
     orderPlace,
     getMyOrder,
     getAllOrder,
     updateOrderStatus,
     getMyOrderDaitle,
-    getAllOrderInExcel
+    getAllOrderInExcel,
+    orderCancel
 }

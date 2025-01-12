@@ -81,24 +81,34 @@ const adminLogin = async (req, res, next) => {
 
 const createProduct = async (req, res, next) => {
     try {
+        console.log(req.body);
         const isAdmin = req.user.isAdmin
         const filename = req.file.filename;
+        console.log("Filename",filename);
         let productImage = `${process.env.IMGURL}Images/${filename}`;
         const categoryId = req.body._id;
+        console.log(categoryId);
         if (isAdmin == 1) {
             if (categoryId) {
                 const isCategory = await Category.findOne({
                     _id: categoryId
                 })
                 if (isCategory) {
+
+                    const sizeU = JSON.parse(req.body.size || "[]");
+                    const paperTypeU = JSON.parse(req.body.paperType || "[]");
+                    const printingTypeU = JSON.parse(req.body.printingType || "[]");
+                    const finishingTypeU = JSON.parse(req.body.finishingType || "[]");
+                    const quantityU = JSON.parse(req.body.quantity || "[]");
+
                     const ProductCreated = await Product.create({
                         productName: req.body.productName,
                         description: req.body.description,
-                        size: req.body.size,
-                        paperType: req.body.paper,
-                        printingType: req.body.printing,
-                        finishingType: req.body.finishing,
-                        quantity: req.body.quantity,
+                        size: sizeU,
+                        paperType: paperTypeU,
+                        printingType: printingTypeU,
+                        finishingType: finishingTypeU,
+                        quantity: quantityU,
                         productImage: productImage,
                         categoryId: categoryId,
                     });
