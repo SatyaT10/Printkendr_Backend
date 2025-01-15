@@ -6,7 +6,7 @@ const fs = require('fs');
 const auth = require('../../Middleware/auth');
 const { newAdmin, adminLogin, createProduct, getAllProduct, getSingleProduct, updateProduct, deleteProduct, updatePassword, forgetPassword, resetPassword, newCategory, getAllCategory, deleteCategory, updateCategory, getCatDaitles, getCatWiseProduct, getTotalCount, fillQuantityPrice } = require('../adminControllers/controllers');
 const { getAllOrder, updateOrderStatus, getAllOrderInExcel } = require("../../ManageOrder/orderContollers/controllers");
-const { getUserApprovel, getAllUsers, getApprovedUsers, getUnapprovedUser } = require("../../User/userControllers/controllers");
+const { getUserApprovel, getAllUsers, getApprovedUsers, getUnapprovedUser, getUserDaitles, newUser, updateBalance, updateUserProfile } = require("../../User/userControllers/controllers");
 
 
 const Storage = multer.diskStorage({
@@ -65,7 +65,7 @@ adminRoute.post('/delete-product', auth.verifyToken, deleteProduct)
 
 adminRoute.get('/get-all-order', auth.verifyToken, getAllOrder);
 
-adminRoute.get('/get-order-excel', getAllOrderInExcel);
+adminRoute.get('/get-order-excel', auth.verifyToken, getAllOrderInExcel);
 
 adminRoute.post('/update-status', auth.verifyToken, updateOrderStatus);
 
@@ -73,11 +73,18 @@ adminRoute.get('/get-approvel', auth.verifyToken, getUserApprovel);
 
 adminRoute.get('/get-users', auth.verifyToken, getAllUsers);
 
+adminRoute.post('/get-user-daitles', auth.verifyToken, getUserDaitles);
+
+adminRoute.post('/add-new-user', auth.verifyToken, newUser);
+
 adminRoute.get('/get-approved-user', auth.verifyToken, getApprovedUsers);
 
 adminRoute.get('/pending-users', auth.verifyToken, getUnapprovedUser);
 
 adminRoute.get('/get-users-count', auth.verifyToken, getTotalCount);
 
+adminRoute.post('/update-wallet-balence', auth.verifyToken, updateBalance);
+
+adminRoute.post('update-user-daitles', auth.verifyToken, updateUserProfile);
 
 module.exports = adminRoute

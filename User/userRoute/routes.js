@@ -3,10 +3,11 @@ const auth = require('../../Middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const Order = require('../../Model/OrdarModel');
+const fs = require('fs')
 
 const { getAllProduct, getSingleProduct, getCatWiseProduct, getAllCategory } = require('../../Admin/adminControllers/controllers');
-const { orderPlace, getMyOrder, getMyOrderDaitle, orderCancel } = require('../../ManageOrder/orderContollers/controllers');
-const { newUser, userLogin, changePassword, forgetPassword, resetPassword, sendResetPasswordMail, updateProfile, getWalletBalance } = require('../userControllers/controllers');
+const { orderPlace, getMyOrder, getMyOrderDaitle, orderCancel, verifyAndUpdateWallet, createOrderToAddBalance } = require('../../ManageOrder/orderContollers/controllers');
+const { newUser, userLogin, changePassword, forgetPassword, resetPassword, sendResetPasswordMail, getWalletBalance, updateUserProfile } = require('../userControllers/controllers');
 
 
 
@@ -60,7 +61,7 @@ route.post('/forget-password', forgetPassword);
 
 route.post('/reset-password', resetPassword)
 
-route.post('/update-profile', auth.verifyToken, updateProfile);
+route.post('/update-profile', auth.verifyToken, updateUserProfile);
 
 route.post('/chnage-password', auth.verifyToken, changePassword);
 
@@ -68,7 +69,7 @@ route.get('/get-all-category', auth.verifyToken, getAllCategory);
 
 route.get('/get-all-product', auth.verifyToken, getAllProduct)
 
-route.post('/order-place', auth.verifyToken, upload.single('file'), orderPlace);
+route.post('/order-place', auth.verifyToken, upload.single('orderFile'), orderPlace);
 
 route.get('/get-order', auth.verifyToken, getMyOrder);
 
@@ -81,5 +82,9 @@ route.get('/get-cat-wise-product', auth.verifyToken, getCatWiseProduct);
 route.get('/wallet-balance', auth.verifyToken, getWalletBalance);
 
 route.post('/cancel-order', auth.verifyToken, orderCancel);
+
+route.post('/add-balance', auth.verifyToken, createOrderToAddBalance);
+
+route.post('/verify-payment', auth.verifyToken, verifyAndUpdateWallet)
 
 module.exports = route

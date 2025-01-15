@@ -5,6 +5,7 @@ const User = require('../../Model/UserModal');
 const excelJS = require('exceljs');
 const Product = require('../../Model/productModel');
 const Wallet = require('../../Model/walletModel');
+const Razorpay = require('razorpay');
 
 const orderPlace = async (req, res, next) => {
     try {
@@ -12,7 +13,8 @@ const orderPlace = async (req, res, next) => {
         const filename = req.file.filename;
         let OrderFile = `${process.env.IMGURL}orderFile/${filename}`;
         const { id, products, totalAmount } = req.body;
-        if (!products || !totalAmount) {
+        const productsJson = JSON.parse(products)
+        if (!productsJson || !totalAmount) {
             throw new CustomError("All fields are required!", 400);
         }
         const userData = await User.findOne({
@@ -20,19 +22,18 @@ const orderPlace = async (req, res, next) => {
         })
         const lastOrder = await Order.findOne({}, {}, { sort: { order_id: -1 } });
         const newOrderId = lastOrder ? lastOrder.order_id + 1 : 1;
-        console.log(lastOrder);
         let orderData
         if (userData) {
             orderData = await Order.findOne({
                 _id: id
             })
             if (orderData) {
-                if (Array.isArray(products) && products.length > 0) {
-                    orderData.products.push(...products);
+                if (Array.isArray(productsJson) && productsJson.length > 0) {
+                    orderData.products.push(...productsJson);
                 } else {
                     throw new CustomError("Invalid products format. Must be a non-empty array.", 400);
                 }
-                const productPromises = products.map(async (product) => {
+                const productPromises = productsJson.map(async (product) => {
                     const p = await Product.findOne({
                         _id: product.productId
                     });
@@ -47,7 +48,7 @@ const orderPlace = async (req, res, next) => {
                     message: "Order updated successfully",
                 });
             } else {
-                const productPromises = products.map(async (product) => {
+                const productPromises = productsJson.map(async (product) => {
                     const p = await Product.findOne({
                         _id: product.productId
                     });
@@ -63,10 +64,11 @@ const orderPlace = async (req, res, next) => {
                     customerEmail: userData.email,
                     shippingAddress: userData.address,
                     customerPhone: userData.whatsAppNo,
-                    products: products,
+                    products: productsJson,
                     status: "placed",
                     totalAmount: totalAmount,
                     productPdf: OrderFile,
+                    spicleRemark: req.body.spicleRemark
                 })
             }
             const updateUserWalletAmount = await Wallet.findOneAndUpdate({
@@ -310,6 +312,65 @@ const orderCancel = async (req, res, next) => {
     }
 }
 
+const razorpayInstance = new Razorpay({
+    key_id: process.env.KEY_ID,
+    key_secret: process.env.KEY_SECRET
+});
+
+const createOrderToAddBalance = async (req, res, next) => {
+    try {
+        console.log(req.body);
+
+        const amount = req.body.amount * 100
+        const options = {
+            amount: amount,
+            currency: 'INR',
+            receipt: `wallet_order_${Date.now()}`,
+            payment_capture: 1,
+        }
+        const order = await razorpayInstance.orders.create(options);
+        console.log(order);
+
+        res.status(200).json({
+            success: true,
+            message: 'Order created successfully',
+            order_id: order.id,
+            amount: amount,
+            key_id: process.env.KEY_ID,
+        });
+
+    } catch (error) {
+        console.log(error);
+        console.log('Failed to create order', error.message);
+        next(error)
+    }
+}
+
+const verifyAndUpdateWallet = async (req, res) => {
+    try {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId } = req.body;
+
+        // Generate the expected signature
+        const generatedSignature = crypto
+            .createHmac('sha256', process.env.KEY_SECRET)
+            .update(razorpay_order_id + '|' + razorpay_payment_id)
+            .digest('hex');
+
+        // Verify the signature
+        if (generatedSignature === razorpay_signature) {
+            // Payment is valid, update the wallet balance
+            const amount = req.body.amount; // Amount in rupees
+            await updateWalletBalance(userId, amount); // A function to update the wallet in DB
+
+            res.status(200).json({ success: true, message: 'Wallet balance updated successfully' });
+        } else {
+            res.status(400).json({ success: false, message: 'Payment verification failed' });
+        }
+    } catch (error) {
+        console.error('Error verifying payment:', error.message);
+        res.status(500).json({ success: false, message: 'Failed to verify payment' });
+    }
+};
 module.exports = {
     orderPlace,
     getMyOrder,
@@ -317,5 +378,7 @@ module.exports = {
     updateOrderStatus,
     getMyOrderDaitle,
     getAllOrderInExcel,
-    orderCancel
+    orderCancel,
+    createOrderToAddBalance,
+    verifyAndUpdateWallet
 }

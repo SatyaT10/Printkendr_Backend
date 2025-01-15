@@ -68,6 +68,9 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: 'pending'
     },
+    spicleRemark:{
+        type:String
+    },
     orderDate: {
         type: Date,
         default: Date.now

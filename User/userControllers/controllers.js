@@ -36,16 +36,18 @@ function generateOtp(email) {
 
 const sendResetPasswordMail = async (name, email, otp) => {
     try {
+        console.log("hOst->", process.env.SMTP_HOST, "-", "USER->", process.env.SMTP_USER, "--", "Password->", process.env.SMTP_PASSWORD);
+
         const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT, 10),
-            secure: process.env.SMTP_PORT == "2525",
+            host: 'live.smtp.mailtrap.io',
+            //process.env.SMTP_HOST,
+            port: 587,
+            secure: false, // or 'STARTTLS'
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASSWORD
-            },
-            tls: {
-                rejectUnauthorized: false, // Disable certificate verification for testing
+                user: 'smtp@mailtrap.io',
+                //process.env.SMTP_USER,
+                pass: 'e2615854c9ae5998571b2d5435176c55'
+                // process.env.SMTP_PASSWORD
             },
         });
         const mailOptions = {
@@ -400,26 +402,45 @@ const resetPassword = async (req, res, next) => {
     }
 }
 
-const updateProfile = async (req, res, next) => {
+const updateUserProfile = async (req, res, next) => {
     try {
+        const isAdmin = req.user.isAdmin;
         const userId = req.user.id;
+        const user_id = req.body._id;
+        const fUserId = userId || user_id
         const { name, phone } = req.body;
         const userDaitle = await User.findOne({
-            _id: userId
-        });
-
+            _id: fUserId
+        }).select('-password');
         if (userDaitle) {
-            userDaitle.name = name;
-            userDaitle.phone = phone;
-            await userDaitle.save();
-            res.status(200).json({
-                status: true,
-                message: "Profile Updated Successfully",
-            })
+            if (isAdmin) {
+                const userDaitles = await User.findOneAndUpdate({
+                    _id: fUserId
+                }, req.body, { new: true, fields: { password: 0 } });
+                res.status(200).
+                    json({
+                        status: true,
+                        message: "Profile Updated Successfully",
+                        userDaitles
+                    })
+            } else if (userId) {
+                if (condition) {
+
+                } else {
+
+                }
+                userDaitle.name = name;
+                userDaitle.phone = phone;
+                await userDaitle.save();
+                res.status(200).
+                    json({
+                        status: true,
+                        message: "Profile Updated Successfully",
+                    })
+            }
         } else {
             throw new CustomError("User not found", 404)
         }
-
     } catch (error) {
         console.error("Error when user want to update his profile:", error.message);
         next(error)
@@ -449,10 +470,65 @@ const getWalletBalance = async (req, res, next) => {
     }
 }
 
+const getUserDaitles = async (req, res, next) => {
+    try {
+        const isAdmin = req.user.isAdmin;
+        const userId = req.user.id;
+        const user_id = req.body._id;
+        const fUserId = userId || user_id
+        if (isAdmin || userId) {
+            if (fUserId) {
+                const userDaitle = await User.findOne({ _id: fUserId });
+                if (userDaitle) {
+                    res.status(200).json({
+                        status: true,
+                        message: "User Daitle",
+                        data: userDaitle
+                    })
+                }
+            } else {
+                throw new CustomError("User not found", 404)
+            }
+        } else {
+            throw new CustomError("You are not authorized to access this route", 403)
+        }
+    } catch (error) {
+        console.error("Error getting user details :", error.message);
+        next(error)
+    }
+}
+
+const updateBalance = async (req, res, next) => {
+    try {
+        const isAdmin = req.user.isAdmin
+        const userId = req.body._id;
+        const amount = req.body.amount;
+        if (isAdmin) {
+            const userWallet = await Wallet.findOne({ userId: userId });
+            if (userWallet) {
+                userWallet.balance += amount;
+                await userWallet.save();
+                res.status(200).json({
+                    status: true,
+                    message: "Balance updated successfully",
+                    data: userWallet
+                })
+            } else {
+                throw new CustomError("User wallet not found", 404)
+            }
+        } else {
+            throw new CustomError("You are not authorized to access this route", 403)
+        }
+    } catch (error) {
+        console.error("Error getting user details :", error.message);
+        next(error)
+    }
+}
+
 module.exports = {
     newUser,
     userLogin,
-    updateProfile,
+    updateUserProfile,
     changePassword,
     forgetPassword,
     resetPassword,
@@ -464,5 +540,7 @@ module.exports = {
     getApprovedUsers,
     getAllUsers,
     getUnapprovedUser,
-    getWalletBalance
+    getWalletBalance,
+    getUserDaitles,
+    updateBalance
 }

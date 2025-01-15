@@ -84,7 +84,7 @@ const createProduct = async (req, res, next) => {
         console.log(req.body);
         const isAdmin = req.user.isAdmin
         const filename = req.file.filename;
-        console.log("Filename",filename);
+        console.log("Filename", filename);
         let productImage = `${process.env.IMGURL}Images/${filename}`;
         const categoryId = req.body._id;
         console.log(categoryId);
@@ -178,11 +178,11 @@ const fillQuantityPrice = async (req, res, next) => {
             else {
                 const results = await Promise.all(
                     combinations.map(async (comb) => {
-                        const { _id, price:prices  } = comb;
+                        const { _id, price: prices } = comb;
                         if (!_id || !prices || !Array.isArray(prices)) {
                             return { _id, error: "Invalid data format for this combination" };
                         }
-                        const combination = await Combination.findOne({ _id:_id });
+                        const combination = await Combination.findOne({ _id: _id });
                         if (!combination) {
                             return { combinationId: comb._id, error: "Combination not found" };
                         }
@@ -191,13 +191,13 @@ const fillQuantityPrice = async (req, res, next) => {
                             if (quantity) {
                                 return { quantity, price };
                             } else {
-                                return { error:"Please provide Quantity first!" };
+                                return { error: "Please provide Quantity first!" };
                             }
                         });
                         const updatedCombination = await Combination.findOneAndUpdate(
                             { _id: _id },
                             { $set: { quantityWithPrice: updatedQuantityWithPrice } },
-                            { new: true } 
+                            { new: true }
                         );
                         return { _id, updatedQuantityWithPrice };
                     })
@@ -655,6 +655,7 @@ const getTotalCount = async (req, res, next) => {
     }
 }
 
+
 module.exports = {
     newAdmin,
     adminLogin,
@@ -673,5 +674,5 @@ module.exports = {
     getCatDaitles,
     getCatWiseProduct,
     getTotalCount,
-    fillQuantityPrice
+    fillQuantityPrice,
 }
