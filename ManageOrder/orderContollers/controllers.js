@@ -143,17 +143,45 @@ const getAllOrder = async (req, res, next) => {
 
 const updateOrderStatus = async (req, res, next) => {
     try {
-        const { orderId, orderStatus } = req.body
-        if (!orderId || !orderStatus) {
+        const { _id, orderStatus } = req.body
+        if (!_id || !orderStatus) {
             throw new CustomError("Please provide order id and order status", 400)
         }
-        const isAdmin = req.user;
+        const isAdmin = req.user.isAdmin;
         if (isAdmin) {
             const orderData = await Order.findOne({
-                _id: orderId
+                _id: _id
             });
             if (orderData) {
-                orderData.status = orderStatus;
+                if (orderStatus == "cancel") {
+                    if (orderData.status == "proceed" || orderData.status == "completed") {
+                        throw new CustomError("You can't cancel this order!", 400)
+                    }else if (orderData.status == "cancel") {
+                        throw new CustomError("Order is already canceled", 400)
+                    } 
+                    else {
+                        const wallet = await Wallet.findOne(
+                            { userId: orderData.customerId },
+                            { balance: 1, _id: 0 }
+                        ).lean();
+                        console.log(wallet.balance);
+                        const userBalance = wallet.balance || 0;
+                        console.log(typeof userBalance);
+                        console.log(orderData.totalAmount);
+                        const refundAmount = userBalance + orderData.totalAmount;
+                        console.log(refundAmount);
+                        await Wallet.findOneAndUpdate({
+                            userId: orderData.customerId,
+                        }, {
+                            $set: {
+                                balance: refundAmount
+                            }
+                        });
+                        orderData.status = orderStatus
+                    }
+                } else {
+                    orderData.status = orderStatus;
+                }
                 await orderData.save();
                 res.status(200).json({
                     success: true,
@@ -272,20 +300,23 @@ const orderCancel = async (req, res, next) => {
         const orderId = req.body._id;
         const isOrder = await Order.findOne({
             _id: orderId,
-            userId: userId
+            customerId: userId
         })
         if (isOrder) {
             if (isOrder.status == "proceed" || isOrder.status == "completed") {
                 throw new CustomError("You can't cancel this order", 400)
-            } else {
+            } else if (isOrder.status = "cancelled") {
+                throw new CustomError("You can't cancel this order", 400)
+            }
+            else {
                 const updateOrder = await Order.findOneAndUpdate({
                     _id: orderId
                 }, {
                     $set: {
-                        status: "cancelled",
+                        status: "cancel",
                         updatedAt: new Date()
                     }
-                });
+                }, { new: true });
                 const updateWalletAmount = await Wallet.findOne({
                     userId: userId
                 })
@@ -297,18 +328,17 @@ const orderCancel = async (req, res, next) => {
                         balance: amount
                     }
                 })
+                res.status(200).json({
+                    message: "Order cancelled successfully",
+                    data: updateOrder
+                })
             }
-            res.status(200).json({
-                message: "Order cancelled successfully",
-                data: updateOrder
-            })
         } else {
             throw new CustomError("You are not able to access", 404)
         }
     } catch (error) {
         console.log("Error cancelling order:", error.message);
         next(error)
-
     }
 }
 

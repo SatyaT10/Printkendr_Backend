@@ -424,19 +424,18 @@ const updateUserProfile = async (req, res, next) => {
                         userDaitles
                     })
             } else if (userId) {
-                if (condition) {
-
+                if (!name || !phone) {
+                    throw new CustomError("Please fill in all fields", 400)
                 } else {
-
+                    userDaitle.name = name;
+                    userDaitle.phone = phone;
+                    await userDaitle.save();
+                    res.status(200).
+                        json({
+                            status: true,
+                            message: "Profile Updated Successfully",
+                        })
                 }
-                userDaitle.name = name;
-                userDaitle.phone = phone;
-                await userDaitle.save();
-                res.status(200).
-                    json({
-                        status: true,
-                        message: "Profile Updated Successfully",
-                    })
             }
         } else {
             throw new CustomError("User not found", 404)

@@ -85,6 +85,6 @@ adminRoute.get('/get-users-count', auth.verifyToken, getTotalCount);
 
 adminRoute.post('/update-wallet-balence', auth.verifyToken, updateBalance);
 
-adminRoute.post('update-user-daitles', auth.verifyToken, updateUserProfile);
+adminRoute.post('/update-user-daitles', auth.verifyToken, updateUserProfile);
 
 module.exports = adminRoute
