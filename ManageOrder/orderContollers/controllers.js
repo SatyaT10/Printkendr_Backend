@@ -21,7 +21,11 @@ const orderPlace = async (req, res, next) => {
             _id: userId
         })
         const lastOrder = await Order.findOne({}, {}, { sort: { order_id: -1 } });
-        const newOrderId = lastOrder ? lastOrder.order_id + 1 : 1;
+
+        const newOrderId = lastOrder ? Number(lastOrder.order_id) + 1 : 1;
+
+        // Format the user_id: Only pad with zeros if it's less than 10000
+        const formattedOrderId = newOrderId < 10000 ? String(newOrderId).padStart(4, '0') : String(newOrderId);
         let orderData
         if (userData) {
             orderData = await Order.findOne({
@@ -58,7 +62,7 @@ const orderPlace = async (req, res, next) => {
                 });
                 await Promise.all(productPromises);
                 orderData = new Order({
-                    order_id: newOrderId,
+                    order_id: formattedOrderId,
                     customerId: userId,
                     customerName: req.body.OrderName || userData.name,
                     customerEmail: userData.email,
@@ -156,20 +160,16 @@ const updateOrderStatus = async (req, res, next) => {
                 if (orderStatus == "cancel") {
                     if (orderData.status == "proceed" || orderData.status == "completed") {
                         throw new CustomError("You can't cancel this order!", 400)
-                    }else if (orderData.status == "cancel") {
+                    } else if (orderData.status == "cancel") {
                         throw new CustomError("Order is already canceled", 400)
-                    } 
+                    }
                     else {
                         const wallet = await Wallet.findOne(
                             { userId: orderData.customerId },
                             { balance: 1, _id: 0 }
                         ).lean();
-                        console.log(wallet.balance);
                         const userBalance = wallet.balance || 0;
-                        console.log(typeof userBalance);
-                        console.log(orderData.totalAmount);
                         const refundAmount = userBalance + orderData.totalAmount;
-                        console.log(refundAmount);
                         await Wallet.findOneAndUpdate({
                             userId: orderData.customerId,
                         }, {

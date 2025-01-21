@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-    order_id:{
-        type:Number,
-        required:true
+    order_id: {
+        type: String,
+        required: true
     },
     customerId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    products:[{
+    products: [{
         productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product', // Reference to Product model
@@ -68,8 +68,8 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: 'pending'
     },
-    spicleRemark:{
-        type:String
+    spicleRemark: {
+        type: String
     },
     orderDate: {
         type: Date,

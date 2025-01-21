@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 
 const userSchema = new mongoose.Schema({
-    user_id:{
-        type:Number,
-        required:true
+    user_id: {
+        type: String,
+        required: true
     },
     name: {
         type: String,
@@ -54,9 +54,9 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    remark:{
-        type:String,
-        default:""
+    remark: {
+        type: String,
+        default: ""
     }
 });
 

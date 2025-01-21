@@ -69,7 +69,7 @@ adminRoute.get('/get-order-excel', auth.verifyToken, getAllOrderInExcel);
 
 adminRoute.post('/update-status', auth.verifyToken, updateOrderStatus);
 
-adminRoute.get('/get-approvel', auth.verifyToken, getUserApprovel);
+adminRoute.post('/get-approvel', auth.verifyToken, getUserApprovel);
 
 adminRoute.get('/get-users', auth.verifyToken, getAllUsers);
 

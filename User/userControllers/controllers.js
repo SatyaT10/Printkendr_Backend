@@ -87,7 +87,9 @@ const getUserApprovel = async (req, res, next) => {
                 )
             } else {
                 const lastUser = await User.findOne({}, {}, { sort: { user_id: -1 } });
-                const newUserId = lastUser ? lastUser.user_id + 1 : 1;
+                const newUserId = lastUser ? Number(lastUser.user_id) + 1 : 1;
+                // Format the user_id: Only pad with zeros if it's less than 10000
+                const formattedUserId = newUserId < 10000 ? String(newUserId).padStart(4, '0') : String(newUserId);
                 if (userStatus == true) {
                     const isWalletExist = await Wallet.findOne({
                         userId: userId
@@ -103,7 +105,7 @@ const getUserApprovel = async (req, res, next) => {
                     }, {
                         $set: {
                             is_approved: 1,
-                            user_id: newUserId
+                            user_id: formattedUserId
                         }
                     })
                     res.status(200).json({
@@ -270,6 +272,7 @@ const userLogin = async (req, res, next) => {
                         email: userData.email,
                         name: userData.name,
                         whatsAppNo: userData.whatsAppNo,
+                        member_id: userData.user_id,
                     }
                     const token = await jwt.sign(user, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIREIN });
                     user.walletBalance = balance;

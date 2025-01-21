@@ -1,140 +1,65 @@
+const fs = require('fs');
+const path = require('path');
 
-const mongoose = require('mongoose');
-
-
-// const productSchema = new mongoose.Schema({
-//     categoryId: {
-//         type: mongoose.Schema.Types.ObjectId,
-//         ref: 'Category'
-//     },
-//     productName: {
-//         type: String,
-//         required: true
-//     },
-//     description: {
-//         type: String
-//     },
-//     size: [{
-//         type: String
-//     }],
-//     paperType: [{
-//         type: String
-//     }],
-//     printingType: [{
-//         type: String
-//     }],
-//     finishingType: [{
-//         type: String
-//     }],
-//     quantity: [{
-//         type: Number
-//     }],
-
-// });
-
-// module.exports = mongoose.model('Product', productSchema);
-
-
-
-// Main Combination Schema
-const combinationSchema = new mongoose.Schema({
-    productId:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product'
-    },
-    size: {
-        type: String,
-        required: true
-    },
-    paperType: {
-        type: String,
-        required: true
-    },
-    printingType: {
-        type: String,
-        required: true
-    },
-    finishingType: {
-        type: String,
-        required: true
-    },
-});
-
-module.exports =  mongoose.model('Combination', combinationSchema)
-
-
-
-
-// const { Size, PaperType, PrintingType, FinishingType, Quantity } = require('./models');
-
-// // Save Sizes
-// await Size.insertMany([{ name: 'A4' }, { name: 'A5' }, { name: 'A6' }]);
-
-// // Save Paper Types
-// await PaperType.insertMany([
-//     { name: '120gsm' },
-//     { name: '130gsm' },
-//     { name: '100gsm' },
-// ]);
-
-// // Save Printing Types
-// await PrintingType.insertMany([{ name: 'Glossy' }, { name: 'Matte' }]);
-
-// // Save Finishing Types
-// await FinishingType.insertMany([{ name: 'Fold' }, { name: 'Staple' }]);
-
-// // Save Quantities
-// await Quantity.insertMany([{ value: 100 }, { value: 200 }, { value: 300 }]);
-
-
-
-
-
-const { Combination } = require('./models');
-
-const sizes = await Size.find();
-const paperTypes = await PaperType.find();
-const printingTypes = await PrintingType.find();
-const finishingTypes = await FinishingType.find();
-const quantities = await Quantity.find();
-
-for (const size of sizes) {
-    for (const paperType of paperTypes) {
-        for (const printingType of printingTypes) {
-            for (const finishingType of finishingTypes) {
-                for (const quantity of quantities) {
-                    const price = Math.random() * 100; // Calculate or fetch price dynamically
-                    await Combination.create({
-                        size: size._id,
-                        paperType: paperType._id,
-                        printingType: printingType._id,
-                        finishingType: finishingType._id,
-                        quantity: quantity._id,
-                        price,
-                    });
-                }
-            }
+// Function to delete an image
+const deleteImage = (imagePath) => {
+    fs.unlink(imagePath, (err) => {
+        if (err) {
+            console.error(`Error deleting file: ${err.message}`);
+            return;
         }
-    }
-}
-
-
-
-
-const combinations = await Combination.find()
-    .populate('size')
-    .populate('paperType')
-    .populate('printingType')
-    .populate('finishingType')
-    .populate('quantity');
-
-combinations.forEach((combination) => {
-    console.log({
-        size: combination.size.name,
-        paperType: combination.paperType.name,
-        printingType: combination.printingType.name,
-        finishingType: combination.finishingType.name,
-        quantity: combination.quantity.value,
-        price: combination.price,
+        console.log(`File deleted successfully: ${imagePath}`);
     });
-});
+};
+
+// Example usage
+const folderPath = path.join(__dirname, 'uploads'); // Replace 'uploads' with your folder name
+const imageName = 'example.jpg'; // Replace with the image name you want to delete
+const imagePath = path.join(folderPath, imageName);
+
+deleteImage(imagePath);
+
+
+
+
+const deleteImage = (imagePath) => {
+    fs.stat(imagePath, (err, stats) => {
+        if (err) {
+            console.error(`File not found or inaccessible: ${err.message}`);
+            return;
+        }
+
+        // File exists, proceed to delete
+        fs.unlink(imagePath, (err) => {
+            if (err) {
+                console.error(`Error deleting file: ${err.message}`);
+                return;
+            }
+            console.log(`File deleted successfully: ${imagePath}`);
+        });
+    });
+};
+
+
+
+
+
+const deleteImages = (folderPath, fileNames) => {
+    fileNames.forEach((fileName) => {
+        const imagePath = path.join(folderPath, fileName);
+        fs.unlink(imagePath, (err) => {
+            if (err) {
+                console.error(`Error deleting file ${fileName}: ${err.message}`);
+            } else {
+                console.log(`File deleted successfully: ${fileName}`);
+            }
+        });
+    });
+};
+
+// Example usage
+const folderPath = path.join(__dirname, 'uploads');
+const filesToDelete = ['image1.jpg', 'image2.png', 'image3.jpeg'];
+
+deleteImages(folderPath, filesToDelete);
+
