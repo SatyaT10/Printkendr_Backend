@@ -75,9 +75,9 @@ route.get('/get-order', auth.verifyToken, getMyOrder);
 
 route.get('/get-order-daitle', auth.verifyToken, getMyOrderDaitle);
 
-route.get('/get-product', auth.verifyToken, getSingleProduct);
+route.post('/get-product', auth.verifyToken, getSingleProduct);
 
-route.get('/get-cat-wise-product', auth.verifyToken, getCatWiseProduct);
+route.post('/get-cat-wise-product', auth.verifyToken, getCatWiseProduct);
 
 route.get('/wallet-balance', auth.verifyToken, getWalletBalance);
 

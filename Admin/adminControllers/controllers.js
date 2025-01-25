@@ -12,6 +12,65 @@ const Combination = require('../../Model/CombinationModel');
 
 const { sendResetPasswordMail, generateOtp, securePassword, verifyOtp } = require('../../User/userControllers/controllers');
 
+const allAdmins = async (req, res, next) => {
+    try {
+        const isAdmin = req.user.isAdmin;
+        if (isAdmin == 1) {
+            const allAdmins = await Admin.find();
+            if (allAdmins) {
+                res.status(200).json({
+                    success: true,
+                    allAdmins
+                });
+            } else {
+                throw new CustomError("No Admins found", 404);
+            }
+        }
+        else {
+            throw new CustomError("You are not authorized to view all admins", 401);
+        }
+    }
+    catch (error) {
+        console.error("Error all admins:", error.message);
+        next(error)
+    }
+}
+
+const deleteAdmin = async (req, res, next) => {
+    try {
+        const isAdmin = req.user.isAdmin;
+        const adminId = req.body._id;
+        if (isAdmin == 1) {
+            if (adminId) {
+                const admin = await Admin.findOne({
+                    _id: adminId
+                });
+                if (admin) {
+                    const deletedAdmin = await Admin.findOneAndDelete({_id: adminId});
+                    res.status(200).json({
+                        success: true,
+                        message: "Admin deleted successfully",
+                        deletedAdmin
+                    });
+                } else {
+                    throw new CustomError("Admin not found", 404);
+                }
+            }
+            else {
+                throw new CustomError("Admin id is required", 400);
+            }
+        }
+        else {
+            throw new CustomError("You are not authorized to delete admin", 401);
+        }
+    }
+    catch (error) {
+        console.error("Error deleting admin:", error.message);
+        next(error)
+    }
+}
+
+
 const newAdmin = async (req, res, next) => {
     try {
         const reqBody = req.body;
@@ -111,6 +170,7 @@ const createProduct = async (req, res, next) => {
                         quantity: quantityU,
                         productImage: productImage,
                         categoryId: categoryId,
+                        categoryName:isCategory.categoryName
                     });
                     const { size, paperType, printingType, finishingType, quantity } = ProductCreated;
 
@@ -675,4 +735,6 @@ module.exports = {
     getCatWiseProduct,
     getTotalCount,
     fillQuantityPrice,
+    allAdmins,
+    deleteAdmin
 }

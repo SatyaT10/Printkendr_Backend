@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const auth = require('../../Middleware/auth');
-const { newAdmin, adminLogin, createProduct, getAllProduct, getSingleProduct, updateProduct, deleteProduct, updatePassword, forgetPassword, resetPassword, newCategory, getAllCategory, deleteCategory, updateCategory, getCatDaitles, getCatWiseProduct, getTotalCount, fillQuantityPrice } = require('../adminControllers/controllers');
+const { newAdmin, adminLogin, createProduct, getAllProduct, getSingleProduct, updateProduct, deleteProduct, updatePassword, forgetPassword, resetPassword, newCategory, getAllCategory, deleteCategory, updateCategory, getCatDaitles, getCatWiseProduct, getTotalCount, fillQuantityPrice, deleteAdmin, allAdmins } = require('../adminControllers/controllers');
 const { getAllOrder, updateOrderStatus, getAllOrderInExcel } = require("../../ManageOrder/orderContollers/controllers");
 const { getUserApprovel, getAllUsers, getApprovedUsers, getUnapprovedUser, getUserDaitles, newUser, updateBalance, updateUserProfile } = require("../../User/userControllers/controllers");
 
@@ -28,6 +28,9 @@ const Storage = multer.diskStorage({
 
 const Upload = multer({ storage: Storage });
 
+adminRoute.get('/admins',auth.verifyToken,allAdmins)
+
+adminRoute.post('/admins-delete',auth.verifyToken,deleteAdmin)
 
 adminRoute.post('/register', newAdmin)
 
@@ -47,9 +50,9 @@ adminRoute.post('/delete-category', auth.verifyToken, deleteCategory);
 
 adminRoute.post('/update-category', auth.verifyToken, updateCategory);
 
-adminRoute.get('/get-cat-daitles', auth.verifyToken, getCatDaitles);
+adminRoute.post('/get-cat-daitles', auth.verifyToken, getCatDaitles);
 
-adminRoute.get('/cat-wise-prod', auth.verifyToken, getCatWiseProduct);
+adminRoute.post('/cat-wise-prod', auth.verifyToken, getCatWiseProduct);
 
 adminRoute.post('/create-product', auth.verifyToken, Upload.single('image'), createProduct)
 
@@ -57,7 +60,7 @@ adminRoute.post('/add-prices', auth.verifyToken, fillQuantityPrice);
 
 adminRoute.get('/get-all-product', auth.verifyToken, getAllProduct)
 
-adminRoute.get('/get-product', auth.verifyToken, getSingleProduct)
+adminRoute.post('/get-product', auth.verifyToken, getSingleProduct)
 
 adminRoute.post('/update-product', auth.verifyToken, updateProduct)
 

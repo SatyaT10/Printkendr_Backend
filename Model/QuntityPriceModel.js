@@ -14,6 +14,14 @@ const quntityIthPriceSchema = new Schema({
             type: Number
         }
     }],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 module.exports = mongoose.model('QuntityPrice', quntityIthPriceSchema);

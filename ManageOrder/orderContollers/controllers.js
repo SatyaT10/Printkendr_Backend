@@ -75,14 +75,14 @@ const orderPlace = async (req, res, next) => {
                     spicleRemark: req.body.spicleRemark
                 })
             }
-            const updateUserWalletAmount = await Wallet.findOneAndUpdate({
+            const updateUserWalletAmount = await Wallet.findOne({
                 userId: userId,
             })
-            const newAmount = await updateUserWalletAmount.balance - totalAmount
-            if (newAmount < 0) {
+            const newAmount = updateUserWalletAmount.balance - totalAmount
+            if (newAmount < 0 || updateUserWalletAmount.balance == 0) {
                 throw new CustomError("Insufficient balance in wallet", 400)
             }
-            const updateWallet = await Wallet.updateOne({
+            const updateWallet = await Wallet.findOneAndUpdate({
                 userId: userId,
             }, {
                 $set: {
