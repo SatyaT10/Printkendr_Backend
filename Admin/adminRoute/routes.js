@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const auth = require('../../Middleware/auth');
-const { newAdmin, adminLogin, createProduct, getAllProduct, getSingleProduct, updateProduct, deleteProduct, updatePassword, forgetPassword, resetPassword, newCategory, getAllCategory, deleteCategory, updateCategory, getCatDaitles, getCatWiseProduct, getTotalCount, fillQuantityPrice, deleteAdmin, allAdmins } = require('../adminControllers/controllers');
+const { newAdmin, adminLogin, createProduct, getAllProduct, getSingleProduct, updateProduct, deleteProduct, updatePassword, forgetPassword, resetPassword, newCategory, getAllCategory, deleteCategory, updateCategory, getCatDaitles, getCatWiseProduct, getTotalCount, fillQuantityPrice, deleteAdmin, allAdmins, deleteUser, deleteWallete, getWalletDetails } = require('../adminControllers/controllers');
 const { getAllOrder, updateOrderStatus, getAllOrderInExcel } = require("../../ManageOrder/orderContollers/controllers");
 const { getUserApprovel, getAllUsers, getApprovedUsers, getUnapprovedUser, getUserDaitles, newUser, updateBalance, updateUserProfile } = require("../../User/userControllers/controllers");
 
@@ -28,9 +28,9 @@ const Storage = multer.diskStorage({
 
 const Upload = multer({ storage: Storage });
 
-adminRoute.get('/admins',auth.verifyToken,allAdmins)
+adminRoute.get('/admins', auth.verifyToken, allAdmins)
 
-adminRoute.post('/admins-delete',auth.verifyToken,deleteAdmin)
+adminRoute.post('/admins-delete', auth.verifyToken, deleteAdmin)
 
 adminRoute.post('/register', newAdmin)
 
@@ -80,6 +80,8 @@ adminRoute.post('/get-user-daitles', auth.verifyToken, getUserDaitles);
 
 adminRoute.post('/add-new-user', auth.verifyToken, newUser);
 
+adminRoute.post('/delete-user', auth.verifyToken, deleteUser);
+
 adminRoute.get('/get-approved-user', auth.verifyToken, getApprovedUsers);
 
 adminRoute.get('/pending-users', auth.verifyToken, getUnapprovedUser);
@@ -87,6 +89,10 @@ adminRoute.get('/pending-users', auth.verifyToken, getUnapprovedUser);
 adminRoute.get('/get-users-count', auth.verifyToken, getTotalCount);
 
 adminRoute.post('/update-wallet-balence', auth.verifyToken, updateBalance);
+
+adminRoute.post('/delete-wallet', auth.verifyToken, deleteWallete);
+
+adminRoute.get('/get-wallet', auth.verifyToken, getWalletDetails)
 
 adminRoute.post('/update-user-daitles', auth.verifyToken, updateUserProfile);
 

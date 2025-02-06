@@ -544,5 +544,6 @@ module.exports = {
     getUnapprovedUser,
     getWalletBalance,
     getUserDaitles,
-    updateBalance
+    updateBalance,
+
 }

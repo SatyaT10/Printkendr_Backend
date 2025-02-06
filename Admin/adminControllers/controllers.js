@@ -46,7 +46,7 @@ const deleteAdmin = async (req, res, next) => {
                     _id: adminId
                 });
                 if (admin) {
-                    const deletedAdmin = await Admin.findOneAndDelete({_id: adminId});
+                    const deletedAdmin = await Admin.findOneAndDelete({ _id: adminId });
                     res.status(200).json({
                         success: true,
                         message: "Admin deleted successfully",
@@ -170,7 +170,7 @@ const createProduct = async (req, res, next) => {
                         quantity: quantityU,
                         productImage: productImage,
                         categoryId: categoryId,
-                        categoryName:isCategory.categoryName
+                        categoryName: isCategory.categoryName
                     });
                     const { size, paperType, printingType, finishingType, quantity } = ProductCreated;
 
@@ -716,6 +716,104 @@ const getTotalCount = async (req, res, next) => {
 }
 
 
+const deleteUser = async (req, res, next) => {
+    try {
+        const isAdmin = req.user.isAdmin;
+        const userId = req.body.userId;
+        if (isAdmin) {
+            if (!userId) {
+                throw new CustomError(
+                    "Please fill all the required fields",
+                    400
+                )
+            } else {
+                const user = await User.findOne({ _id: userId });
+                if (user) {
+                    await Wallet.findOneAndDelete({
+                        userId: userId
+                    })
+                    await User.findOneAndDelete({
+                        _id: userId
+                    });
+                    res.status(200).json({
+                        status: true,
+                        message: "User deleted successfully",
+                    })
+                } else {
+                    throw new CustomError("User not found", 404)
+                }
+            }
+        } else {
+            throw new CustomError("You are not authorized to access this route", 403)
+        }
+    } catch (error) {
+        console.error("Error getting user details :", error.message);
+        next(error)
+    }
+}
+
+const deleteWallete = async (req, res, next) => {
+    try {
+        const isAdmin = req.user.isAdmin;
+        const walletId = req.body.walletId;
+        const alldelete = req.body.alldelete
+        if (isAdmin) {
+            if (walletId) {
+                const wallet = await Wallet.findOne({ _id: walletId });
+                if (wallet) {
+                    await Wallet.findOneAndDelete({
+                        _id: walletId
+                    });
+                    res.status(200).json({
+                        status: true,
+                        message: "Wallet deleted successfully",
+                    })
+                } else {
+                    throw new CustomError("Wallet not found", 404)
+                }
+            } else if (alldelete) {
+                const wallet = await Wallet.deleteMany({})
+                res.status(200).json({
+                    status: true,
+                    message: "Wallet deleted successfully",
+                    wallet
+                })
+            }
+            else {
+                throw new CustomError("Invalid request", 400)
+            }
+        }
+        else {
+            throw new CustomError("You are not authorized to access this route", 403)
+        }
+    } catch (error) {
+        console.error("Error getting user details :", error.message);
+        next(error)
+    }
+}
+
+const getWalletDetails = async (req, res, next) => {
+    try {
+        const isAdmin = req.user.isAdmin;
+        if (isAdmin) {
+            const wallet = await Wallet.find()
+            res.status(200).json({
+                status: true,
+                message: "Wallet details fetched successfully",
+                wallet
+            })
+        } else {
+            throw new CustomError("You are not authorized to access this route", 403)
+
+        }
+
+    } catch (error) {
+        console.error("Error getting user details :", error.message);
+        next(error)
+    }
+}
+
+
 module.exports = {
     newAdmin,
     adminLogin,
@@ -736,5 +834,8 @@ module.exports = {
     getTotalCount,
     fillQuantityPrice,
     allAdmins,
-    deleteAdmin
+    deleteAdmin,
+    deleteUser,
+    deleteWallete,
+    getWalletDetails
 }
