@@ -366,10 +366,16 @@ const deleteProduct = async (req, res, next) => {
         const isAdmin = req.user.isAdmin
         const ProductId = req.body._id
         if (isAdmin == 1) {
-            const ProductData = await Product.findOneAndDelete({
+            const productData1 = await Product.findOne({
                 _id: ProductId
             })
-            if (ProductData) {
+            if (productData1) {
+                await Combination.deleteMany({
+                    productId: productData1._id
+                })
+                const ProductData = await Product.findOneAndDelete({
+                    _id: ProductId
+                })
                 res.status(201).
                     json({
                         success: true,
@@ -514,7 +520,7 @@ const getAllCategory = async (req, res, next) => {
         const isAdmin = req.user.isAdmin;
         const userId = req.user.id;
         if (isAdmin == 1 || userId) {
-            const categories = await Category.findAll();
+            const categories = await Category.find();
             if (categories) {
                 res.status(200).json({
                     success: true,
@@ -543,6 +549,15 @@ const deleteCategory = async (req, res, next) => {
                     _id: categoryId
                 });
                 if (category) {
+                    const productData = await Product.find({ categoryId: categoryId });
+                    console.log("ProductData", productData);
+
+                    const combinationPromises = productData.map((product) =>
+                        Combination.deleteMany({ productId: product._id })
+                    );
+
+                    const combinations = await Promise.all(combinationPromises);
+                    console.log("All combinations", combinations);
                     await Product.deleteMany({
                         categoryId: categoryId
                     });
